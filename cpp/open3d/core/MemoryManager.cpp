@@ -57,15 +57,7 @@ void MemoryManager::Memcpy(void* dst_ptr,
     } else if (src_device.IsCUDA() && dst_device.IsCUDA()) {
         device_mm = GetMemoryManagerDevice(src_device);
     }
-    // SYCL.
-    else if (src_device.IsCPU() && dst_device.IsSYCL()) {
-        device_mm = GetMemoryManagerDevice(dst_device);
-    } else if (src_device.IsSYCL() && dst_device.IsCPU()) {
-        device_mm = GetMemoryManagerDevice(src_device);
-    } else if (src_device.IsSYCL() && dst_device.IsSYCL()) {
-        device_mm = GetMemoryManagerDevice(src_device);
-    }
-    // Not supporting other combinations at the moment, e.g. SYCL->CUDA.
+    // Not supporting other combinations at the moment.
     else {
         utility::LogError("Unsupported device type from {} to {}.",
                           src_device.ToString(), dst_device.ToString());
@@ -108,18 +100,13 @@ std::shared_ptr<MemoryManagerDevice> MemoryManager::GetMemoryManagerDevice(
                      std::make_shared<MemoryManagerCUDA>()},
 #endif
 #endif
-#ifdef BUILD_SYCL_MODULE
-                    {Device::DeviceType::SYCL,
-                     std::make_shared<MemoryManagerSYCL>()},
-#endif
             };
 
     if (map_device_type_to_memory_manager.find(device.GetType()) ==
         map_device_type_to_memory_manager.end()) {
         utility::LogError(
                 "Unsupported device \"{}\". Set BUILD_CUDA_MODULE=ON to "
-                "compile for CUDA support and BUILD_SYCL_MODULE=ON to compile "
-                "for SYCL support.",
+                "compile for CUDA support",
                 device.ToString());
     }
     return map_device_type_to_memory_manager.at(device.GetType());

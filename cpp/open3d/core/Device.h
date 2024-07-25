@@ -20,8 +20,7 @@ public:
     /// Type for device.
     enum class DeviceType {
         CPU = 0,
-        CUDA = 1,
-        SYCL = 2,  // SYCL gpu_selector().
+        CUDA = 1
     };
 
     /// Default constructor -> "CPU:0".
@@ -48,9 +47,6 @@ public:
     /// Returns true iff device type is CUDA.
     inline bool IsCUDA() const { return device_type_ == DeviceType::CUDA; }
 
-    /// Returns true iff device type is SYCL GPU.
-    inline bool IsSYCL() const { return device_type_ == DeviceType::SYCL; }
-
     /// Returns string representation of device, e.g. "CPU:0", "CUDA:0".
     std::string ToString() const;
 
@@ -71,9 +67,6 @@ public:
 
     /// Returns a vector of available CUDA device.
     static std::vector<Device> GetAvailableCUDADevices();
-
-    /// Returns a vector of available SYCL device.
-    static std::vector<Device> GetAvailableSYCLDevices();
 
     /// Print all available devices.
     static void PrintAvailableDevices();
@@ -98,10 +91,6 @@ public:
 
     inline bool IsCUDA() const {
         return GetDevice().GetType() == Device::DeviceType::CUDA;
-    }
-
-    inline bool IsSYCL() const {
-        return GetDevice().GetType() == Device::DeviceType::SYCL;
     }
 };
 

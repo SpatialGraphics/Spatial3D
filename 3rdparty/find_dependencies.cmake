@@ -1533,25 +1533,7 @@ open3d_import_3rdparty_library(3rdparty_uvatlas
 )
 list(APPEND Open3D_3RDPARTY_PRIVATE_TARGETS_FROM_CUSTOM Open3D::3rdparty_uvatlas)
 
-
-if(BUILD_SYCL_MODULE)
-    add_library(3rdparty_sycl INTERFACE)
-    target_link_libraries(3rdparty_sycl INTERFACE
-        $<$<AND:$<CXX_COMPILER_ID:IntelLLVM>,$<NOT:$<LINK_LANGUAGE:ISPC>>>:sycl>)
-    target_link_options(3rdparty_sycl INTERFACE
-        $<$<AND:$<CXX_COMPILER_ID:IntelLLVM>,$<NOT:$<LINK_LANGUAGE:ISPC>>>:-fsycl -fsycl-targets=spir64_x86_64>)
-    if(NOT BUILD_SHARED_LIBS OR arg_PUBLIC)
-        install(TARGETS 3rdparty_sycl EXPORT Open3DTargets)
-    endif()
-    add_library(Open3D::3rdparty_sycl ALIAS 3rdparty_sycl)
-    list(APPEND Open3D_3RDPARTY_PRIVATE_TARGETS_FROM_SYSTEM Open3D::3rdparty_sycl)
-endif()
-
-if(BUILD_SYCL_MODULE)
-    option(OPEN3D_USE_ONEAPI_PACKAGES "Use the oneAPI distribution of MKL/TBB/DPL." ON)
-else()
-    option(OPEN3D_USE_ONEAPI_PACKAGES "Use the oneAPI distribution of MKL/TBB/DPL." OFF)
-endif()
+option(OPEN3D_USE_ONEAPI_PACKAGES "Use the oneAPI distribution of MKL/TBB/DPL." OFF)
 mark_as_advanced(OPEN3D_USE_ONEAPI_PACKAGES)
 
 if(OPEN3D_USE_ONEAPI_PACKAGES)

@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "open3d/core/CUDAUtils.h"
-#include "open3d/core/SYCLUtils.h"
 #include "open3d/utility/Helper.h"
 #include "open3d/utility/Logging.h"
 
@@ -27,8 +26,6 @@ static Device::DeviceType StringToDeviceType(const std::string& type_colon_id) {
             return Device::DeviceType::CPU;
         } else if (device_type_lower == "cuda") {
             return Device::DeviceType::CUDA;
-        } else if (device_type_lower == "sycl") {
-            return Device::DeviceType::SYCL;
         } else {
             utility::LogError(
                     "Invalid device string {}. Valid device strings are like "
@@ -94,9 +91,6 @@ std::string Device::ToString() const {
         case DeviceType::CUDA:
             str += "CUDA";
             break;
-        case DeviceType::SYCL:
-            str += "SYCL";
-            break;
         default:
             utility::LogError("Unsupported device type");
     }
@@ -116,11 +110,9 @@ bool Device::IsAvailable() const {
 std::vector<Device> Device::GetAvailableDevices() {
     const std::vector<Device> cpu_devices = GetAvailableCPUDevices();
     const std::vector<Device> cuda_devices = GetAvailableCUDADevices();
-    const std::vector<Device> sycl_devices = GetAvailableSYCLDevices();
     std::vector<Device> devices;
     devices.insert(devices.end(), cpu_devices.begin(), cpu_devices.end());
     devices.insert(devices.end(), cuda_devices.begin(), cuda_devices.end());
-    devices.insert(devices.end(), sycl_devices.begin(), sycl_devices.end());
     return devices;
 }
 
@@ -134,10 +126,6 @@ std::vector<Device> Device::GetAvailableCUDADevices() {
         devices.push_back(Device(DeviceType::CUDA, i));
     }
     return devices;
-}
-
-std::vector<Device> Device::GetAvailableSYCLDevices() {
-    return sycl::GetAvailableSYCLDevices();
 }
 
 void Device::PrintAvailableDevices() {

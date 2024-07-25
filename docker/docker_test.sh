@@ -42,10 +42,6 @@ OPTION:
     cpu-shared-ml               : Ubuntu CPU shared with ML
     cpu-shared-ml-release       : Ubuntu CPU shared with ML, release mode
 
-    # Sycl CPU CI (Dockerfile.ci)
-    sycl-shared                : SYCL (oneAPI) with shared lib
-    sycl-static                : SYCL (oneAPI) with static lib
-
     # ML CIs (Dockerfile.ci)
     2-bionic                   : CUDA CI, 2-bionic, developer mode
     3-ml-shared-bionic-release : CUDA CI, 3-ml-shared-bionic, release mode
@@ -105,14 +101,12 @@ cpp_python_linking_uninstall_test() {
     # - BUILD_CUDA_MODULE
     # - BUILD_PYTORCH_OPS
     # - BUILD_TENSORFLOW_OPS
-    # - BUILD_SYCL_MODULE
     # - NPROC (optional)
     echo "[cpp_python_linking_uninstall_test()] DOCKER_TAG=${DOCKER_TAG}"
     echo "[cpp_python_linking_uninstall_test()] BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}"
     echo "[cpp_python_linking_uninstall_test()] BUILD_CUDA_MODULE=${BUILD_CUDA_MODULE}"
     echo "[cpp_python_linking_uninstall_test()] BUILD_PYTORCH_OPS=${BUILD_PYTORCH_OPS}"
     echo "[cpp_python_linking_uninstall_test()] BUILD_TENSORFLOW_OPS=${BUILD_TENSORFLOW_OPS}"
-    echo "[cpp_python_linking_uninstall_test()] BUILD_SYCL_MODULE=${BUILD_SYCL_MODULE}"
     echo "[cpp_python_linking_uninstall_test()] NPROC=${NPROC:=$(nproc)}"
 
     # Config-dependent argument: gpu_run_args
@@ -163,11 +157,7 @@ cpp_python_linking_uninstall_test() {
     "
 
     # C++ linking with new project
-    if [ "${BUILD_SYCL_MODULE}" == "ON" ]; then
-        cmake_compiler_args="-DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx"
-    else
-        cmake_compiler_args=""
-    fi
+    cmake_compiler_args=""
 
     ${docker_run} -i --rm "${DOCKER_TAG}" /bin/bash -c "\
         git clone https://github.com/isl-org/open3d-cmake-find-package.git \
@@ -180,7 +170,7 @@ cpp_python_linking_uninstall_test() {
      && ./Draw --skip-for-unit-test \
     "
 
-    if [ "${BUILD_SHARED_LIBS}" == "ON" ] && [ "${BUILD_SYCL_MODULE}" == "OFF" ]; then
+    if [ "${BUILD_SHARED_LIBS}" == "ON" ]; then
         ${docker_run} -i --rm "${DOCKER_TAG}" /bin/bash -c "\
             git clone https://github.com/isl-org/open3d-cmake-find-package.git \
          && cd open3d-cmake-find-package \
@@ -316,18 +306,6 @@ cpu-shared-ml)
     ;;
 cpu-shared-ml-release)
     cpu-shared-ml-release_export_env
-    ci_print_env
-    cpp_python_linking_uninstall_test
-    ;;
-
-# SYCL CI
-sycl-shared)
-    sycl-shared_export_env
-    ci_print_env
-    cpp_python_linking_uninstall_test
-    ;;
-sycl-static)
-    sycl-static_export_env
     ci_print_env
     cpp_python_linking_uninstall_test
     ;;

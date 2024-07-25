@@ -52,7 +52,7 @@ else()
 endif()
 option(BUILD_COMMON_ISPC_ISAS     "Build for common ISPC ISAs (for release)" OFF)
 option(BUILD_GUI                  "Builds new GUI"                           ON )
-option(WITH_OPENMP                "Use OpenMP multi-threading"               ON )
+option(WITH_OPENMP                "Use OpenMP multi-threading"               OFF )
 option(WITH_IPPICV                "Use Intel Performance Primitives"         ON )
 option(ENABLE_HEADLESS_RENDERING  "Use OSMesa for headless rendering"        OFF)
 if(BUILD_SHARED_LIBS)
@@ -60,9 +60,7 @@ if(BUILD_SHARED_LIBS)
 else()
     option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime"      ON )
 endif()
-option(BUILD_SYCL_MODULE          "Build SYCL module with Intel oneAPI"      OFF)
 option(GLIBCXX_USE_CXX11_ABI      "Set -D_GLIBCXX_USE_CXX11_ABI=1"           ON )
-option(ENABLE_SYCL_UNIFIED_SHARED_MEMORY "Enable SYCL unified shared memory" OFF)
 if(BUILD_GUI AND (WIN32 OR UNIX AND NOT LINUX_AARCH64 AND NOT APPLE_AARCH64))
     option(BUILD_WEBRTC           "Build WebRTC visualizer"                  ON )
 else()
@@ -266,37 +264,8 @@ project(Open3D
     LANGUAGES C CXX)
 message(STATUS "Open3D ${OPEN3D_VERSION_FULL}")
 
-# Check SYCL compatiblility
-if (BUILD_SYCL_MODULE AND NOT CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
-    message(FATAL_ERROR "BUILD_SYCL_MODULE requires IntelLLVM (DPC++) compiler, "
-                        "but got CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID} "
-                        "and CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}.")
-endif()
-if (BUILD_SYCL_MODULE AND (NOT UNIX OR APPLE))
-    message(FATAL_ERROR "Open3D SYCL support is only available on Linux")
-endif()
-if(BUILD_SYCL_MODULE AND NOT GLIBCXX_USE_CXX11_ABI)
-    message(FATAL_ERROR "BUILD_SYCL_MODULE=ON requires GLIBCXX_USE_CXX11_ABI=ON")
-endif()
-if(BUILD_SYCL_MODULE AND BUILD_TENSORFLOW_OPS)
-    message(FATAL_ERROR "BUILD_SYCL_MODULE=ON requires BUILD_TENSORFLOW_OPS=OFF")
-endif()
-if(BUILD_SYCL_MODULE AND BUILD_PYTORCH_OPS)
-    message(FATAL_ERROR "BUILD_SYCL_MODULE=ON requires BUILD_PYTORCH_OPS=OFF")
-endif()
-if(BUILD_SYCL_MODULE AND BUILD_CUDA_MODULE)
-    message(FATAL_ERROR "BUILD_SYCL_MODULE and BUILD_SYCL_MODULE cannot be on at the same time for now.")
-endif()
-
 # Global flag to set CXX standard.
-# This does not affect 3rd party libraries.
-# Tensorflow 2.9+ requires cxx_17, but MSVC 19.29 throws errors with C++17
-# enabled.
-if (BUILD_SYCL_MODULE OR BUILD_TENSORFLOW_OPS)
-    set(CMAKE_CXX_STANDARD 17)
-else()
-    set(CMAKE_CXX_STANDARD 14)
-endif()
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)   # Improved compatibility
 
 # FIXME: Remove this workaround once a fixed Visual Studio 16.10 version is released.
@@ -491,7 +460,6 @@ endmacro()
 include(Open3DLink3rdpartyLibraries)
 include(Open3DSetGlobalProperties)
 include(Open3DShowAndAbortOnWarning)
-include(Open3DSYCLTargetSources)
 
 # Enumerate all third-party libraries which we need later
 # This creates the necessary targets and sets the

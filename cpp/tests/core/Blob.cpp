@@ -15,11 +15,11 @@
 namespace open3d {
 namespace tests {
 
-class BlobPermuteDevices : public PermuteDevicesWithSYCL {};
+class BlobPermuteDevices : public PermuteDevices {};
 INSTANTIATE_TEST_SUITE_P(
         Blob,
         BlobPermuteDevices,
-        testing::ValuesIn(PermuteDevicesWithSYCL::TestCases()));
+        testing::ValuesIn(PermuteDevices::TestCases()));
 
 TEST_P(BlobPermuteDevices, BlobConstructor) {
     core::Device device = GetParam();

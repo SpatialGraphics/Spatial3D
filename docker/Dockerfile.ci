@@ -16,7 +16,6 @@ ARG BUILD_CUDA_MODULE
 ARG BUILD_TENSORFLOW_OPS
 ARG BUILD_PYTORCH_OPS
 ARG PACKAGE
-ARG BUILD_SYCL_MODULE
 ARG CI
 
 RUN if [ -z "${DEVELOPER_BUILD}"      ]; then echo "Error: ARG DEVELOPER_BUILD      not specified."; exit 1; fi \
@@ -28,8 +27,7 @@ RUN if [ -z "${DEVELOPER_BUILD}"      ]; then echo "Error: ARG DEVELOPER_BUILD  
  && if [ -z "${BUILD_CUDA_MODULE}"    ]; then echo "Error: ARG BUILD_CUDA_MODULE    not specified."; exit 1; fi \
  && if [ -z "${BUILD_TENSORFLOW_OPS}" ]; then echo "Error: ARG BUILD_TENSORFLOW_OPS not specified."; exit 1; fi \
  && if [ -z "${BUILD_PYTORCH_OPS}"    ]; then echo "Error: ARG BUILD_PYTORCH_OPS    not specified."; exit 1; fi \
- && if [ -z "${PACKAGE}"              ]; then echo "Error: ARG PACKAGE              not specified."; exit 1; fi \
- && if [ -z "${BUILD_SYCL_MODULE}"    ]; then echo "Error: ARG BUILD_SYCL_MODULE    not specified."; exit 1; fi
+ && if [ -z "${PACKAGE}"              ]; then echo "Error: ARG PACKAGE              not specified."; exit 1; fi
 
 # Fix Nvidia repo key rotation issue
 # https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212771
@@ -54,18 +52,11 @@ ENV BUILD_CUDA_MODULE=${BUILD_CUDA_MODULE}
 ENV BUILD_TENSORFLOW_OPS=${BUILD_TENSORFLOW_OPS}
 ENV BUILD_PYTORCH_OPS=${BUILD_PYTORCH_OPS}
 ENV PACKAGE=${PACKAGE}
-ENV BUILD_SYCL_MODULE=${BUILD_SYCL_MODULE}
 
 # Prevent interactive inputs when installing packages
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/Los_Angeles
 ENV SUDO=command
-
-# The base image already contains the oneAPI packages.
-# Having this in the list can cause checksum errors when apt-get update.
-RUN if [ "${BUILD_SYCL_MODULE}" = "ON" ]; then \
-        rm -rf /etc/apt/sources.list.d/oneAPI.list; \
-    fi
 
 # Dependencies: basic
 RUN apt-get update && apt-get install -y \
@@ -83,11 +74,9 @@ ENV PATH="/root/miniconda3/bin:${PATH}"
 ENV PATH="/root/miniconda3/envs/open3d/bin:${PATH}"
 ENV PATH="/opt/intel/oneapi/intelpython/latest/bin:${PATH}"
 ENV PATH="/opt/intel/oneapi/intelpython/latest/envs/open3d/bin:${PATH}"
-RUN if [ "${BUILD_SYCL_MODULE}" = "OFF" ]; then \
         wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh; \
         bash Miniconda3-latest-Linux-x86_64.sh -b; \
         rm Miniconda3-latest-Linux-x86_64.sh; \
-    fi
 RUN conda --version \
  && conda create -y -n open3d python=${PYTHON_VERSION}
 
@@ -173,11 +162,6 @@ RUN mkdir -p /etc/apt/keyrings \
 
 # Build all
 RUN \
-    if [ "${BUILD_SYCL_MODULE}" = "ON" ]; then \
-        export CMAKE_CXX_COMPILER=icpx; \
-        export CMAKE_C_COMPILER=icx; \
-        export GLIBCXX_USE_CXX11_ABI=ON; \
-    else \
         export CMAKE_CXX_COMPILER=g++; \
         export CMAKE_C_COMPILER=gcc; \
         # TODO: PyTorch still use old CXX ABI, remove this line when PyTorch is updated
@@ -186,14 +170,12 @@ RUN \
         else \
             export GLIBCXX_USE_CXX11_ABI=ON; \
         fi \
-    fi \
  && mkdir build \
  && cd build \
  && cmake -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} \
           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} \
-          -DBUILD_SYCL_MODULE=${BUILD_SYCL_MODULE} \
           -DDEVELOPER_BUILD=${DEVELOPER_BUILD} \
           -DBUILD_LIBREALSENSE=ON \
           -DBUILD_CUDA_MODULE=${BUILD_CUDA_MODULE} \
